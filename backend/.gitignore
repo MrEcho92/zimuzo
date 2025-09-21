@@ -1,25 +1,52 @@
-.idea
-.ipynb_checkpoints
-.mypy_cache
-.vscode
-__pycache__
-.pytest_cache
-htmlcov
-dist
-site
-.coverage
-coverage.xml
-.netlify
-test.db
-log.txt
-Pipfile.lock
+# Virtual environments
+env/
+env3*/
+venv/
+.venv/
 env3.*
 env
 .env
+.env.dev
+.env.prod
+__pypackages__/
+
+
+# IDEs and editors
+.idea/
+.vscode/
+
+# Package distribution and build files
+*.egg-info/
+dist/
+/build/
+_build/
+
+# Python bytecode and cache files
+*.py[cod]
+.cache/
+/.ghtopdep_cache/
+.hypothesis
+.mypy_cache/
+.pytest_cache/
+/.ruff_cache/
+.pytest_cache
+.mypy_cache
+
+# Test files
+.coverage
+coverage.xml
+test.db
+
+# Build artifacts
+.ipynb_checkpoints
+__pycache__
+htmlcov
+dist
+site
+log.txt
+Pipfile.lock
 docs_build
 site_build
-venv
-.venv
 docs.zip
 archive.zip
 
@@ -28,5 +55,9 @@ archive.zip
 .*.sw?
 .cache
 
-# macOS
+# Other files and folders
+.python-version
 .DS_Store
+.auto-format
+/sandbox/
+/worktrees/
