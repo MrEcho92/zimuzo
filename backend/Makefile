@@ -25,6 +25,10 @@ help:
 .pre-commit: .uv
 	@uv run pre-commit -V || uv pip install pre-commit
 
+.PHONY: .pre-commit-update  ## Check that pre-commit is installed
+.pre-commit-update: .uv
+	uv run pre-commit autoupdate
+
 .PHONY: install  ## Install the package, dependencies, and pre-commit for local development
 install: .uv
 	uv sync
