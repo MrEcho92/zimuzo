@@ -51,7 +51,7 @@ lint: .uv
 
 .PHONY: isort ## Run isort on python source files
 isort: .uv
-	uv run isort $(SRC_DIR)
+	uv run isort $(SRC_DIRS)
 
 .PHONY: venv
 venv: .uv

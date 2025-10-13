@@ -1,8 +1,9 @@
 import os
 from typing import List
+
+from dotenv import load_dotenv
 from pydantic import AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -22,7 +23,7 @@ class Settings(BaseSettings):
     def get_database_url(self) -> str:
         return os.getenv(
             "DATABASE_URL",
-            f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_server}:{self.postgres_port}/{self.postgres_db}",
+            f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}@{self.postgres_server}:{self.postgres_port}/{self.postgres_db}",
         )
 
     model_config = SettingsConfigDict(env_file=".env")
