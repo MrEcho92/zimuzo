@@ -2,7 +2,7 @@ version: '3.10'
 services:
   db:
     image: postgres:14.1-alpine
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env
     ports:
@@ -24,6 +24,21 @@ services:
       - .env
     depends_on:
       - db
+    volumes:
+      - .:/app  # Mount the current directory to /app inside the container
+      - ./alembic/versions:/app/alembic/versions  # Ensure migration files are shared
+    working_dir: /app
+
+  pgadmin:
+      container_name: pgadmin
+      image: dpage/pgadmin4
+      environment:
+        - PGADMIN_DEFAULT_EMAIL=admin@pgadmin.org
+        - PGADMIN_DEFAULT_PASSWORD=admin
+      ports:
+        - "5050:80"
+      depends_on:
+        - db
 
 volumes:
   db: {}

@@ -21,12 +21,12 @@ help:
 .uv:
 	@uv -V || echo 'Please install uv: https://docs.astral.sh/uv/getting-started/installation/'
 
-.PHONY: .pre-commit  ## Check that pre-commit is installed
-.pre-commit: .uv
+.PHONY: pre-commit  ## Check that pre-commit is installed
+pre-commit: .uv
 	@uv run pre-commit -V || uv add --dev pre-commit
 
-.PHONY: .pre-commit-update  ## Check that pre-commit is installed
-.pre-commit-update: .uv
+.PHONY: pre-commit-update  ## Check that pre-commit is installed
+pre-commit-update: .uv
 	uv run pre-commit autoupdate
 
 .PHONY: install  ## Install the package, dependencies, and pre-commit for local development
@@ -79,11 +79,11 @@ docker-compose-down: ## Run docker compose down
 .PHONY: db-migrate
 db-migrate: ## Create a new migration and run migrations
 	@if [ -z "${MSG}" ]; then echo "Error: MSG variable is not set. Usage: make db-migrate MSG='your message'"; exit 1; fi
-	uv run alembic revision --autogenerate -m ${MSG}
+	docker-compose exec app uv run alembic revision --autogenerate -m ${MSG}
 
 .PHONY: db-upgrade
 db-upgrade: ## Apply all pending migrations
-	uv run alembic upgrade head
+	docker-compose exec app uv run alembic upgrade head
 
 .PHONY: clean  ## Clear local caches and build artifacts
 clean:

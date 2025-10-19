@@ -20,7 +20,9 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)) -> UserRe
     :return: UserResponse
     """
     try:
-        existing_user = await db.query(User).filter(User.username == user.username).first()
+        existing_user = (
+            await db.query(User).filter(User.username == user.username).first()
+        )
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists"
@@ -40,7 +42,9 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)) -> UserRe
         }
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 @router.post("/admin/users/{username}/keys/generate")
@@ -53,7 +57,9 @@ async def generate_key_for_user(username: str, db: Session = Depends(get_db)) ->
     try:
         user = await db.query(User).filter(User.username == username).first()
         if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
 
         # Generate key
         raw_key = generate_api_key()
@@ -73,11 +79,15 @@ async def generate_key_for_user(username: str, db: Session = Depends(get_db)) ->
         }
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 @router.get("/admin/users/{username}/keys")
-async def list_keys_for_user(username: str, db: Session = Depends(get_db)) -> list[APIKeyResponse]:
+async def list_keys_for_user(
+    username: str, db: Session = Depends(get_db)
+) -> list[APIKeyResponse]:
     """List all API keys for a user (shows api_id only, not the actual key)
     :param username: str
     :param db: Database session
@@ -86,16 +96,22 @@ async def list_keys_for_user(username: str, db: Session = Depends(get_db)) -> li
     try:
         user = await db.query(User).filter(User.username == username).first()
         if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
 
         keys = await db.query(APIKey).filter(APIKey.username == username).all()
         return [APIKeyResponse.model_validate(k) for k in keys]
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 @router.delete("/admin/users/{username}/keys/{key_id}")
-async def revoke_api_key(username: str, key_id: str, db: Session = Depends(get_db)) -> Any:
+async def revoke_api_key(
+    username: str, key_id: str, db: Session = Depends(get_db)
+) -> Any:
     """Revoke an API key
     :param username: str
     :param key_id: str
@@ -110,14 +126,18 @@ async def revoke_api_key(username: str, key_id: str, db: Session = Depends(get_d
         )
 
         if not api_key:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="API key not found"
+            )
 
         api_key.is_active = False
         await db.commit()
         return {"message": "API key revoked"}
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 @router.get("/protected/profile")

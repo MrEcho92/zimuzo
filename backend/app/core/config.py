@@ -15,9 +15,13 @@ class Settings(BaseSettings):
     project_name: str = "Zimuzo Backend"
     postgres_server: str = "localhost"
     postgres_port: int = 5432
-    postgres_user: str = "user"
-    postgres_password: str = "password"
-    postgres_db: str = "database"
+    postgres_user: str = "postgres"
+    postgres_password: str = "postgres"
+    postgres_db: str = "zimuzo-db"
+    env: str = "dev"
+    domain: str = "localhost"
+    db_host: str = "db"
+    database_url: str = ""
 
     @property
     def get_database_url(self) -> str:

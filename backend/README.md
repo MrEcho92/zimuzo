@@ -7,3 +7,16 @@ This backend application is built using FastAPI. It provides a RESTful API for m
 - Python 3.10+
 - FastAPI
 - Uvicorn
+- UV
+
+If you have docker desktop installed locally, then run command `docker-compose up`. This command sets up database, application and pgadmin for the database.
+
+Useful commands if you want to run locally:
+
+```
+To run makemigrations and apply migrations
+
+docker-compose exec app alembic revision --autogenerate -m
+docker-compose exec app alembic upgrade head
+
+```
