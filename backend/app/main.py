@@ -23,7 +23,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=settings.project_name, lifespan=lifespan)
-
 app.include_router(api_router, prefix=settings.api_prefix)
 
 # TODO: Update CORS settings for production
@@ -38,4 +37,5 @@ app.add_middleware(
 
 @app.get("/health")
 async def health_check() -> dict:
+    """Health check endpoint."""
     return {"status": "healthy"}

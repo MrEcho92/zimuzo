@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.database.db import Base
 
 # import all models here to ensure they are registered with Base
-# from app.models import Agent, APIKey
+from backend.app.models.models import APIKey, User  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

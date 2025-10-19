@@ -10,9 +10,7 @@ from app.core.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Set up the SQLAlchemy engine and session
-
-# echo=False to disable SQL echoing for production
+# TODO: echo=False to disable SQL echoing for production
 engine = create_async_engine(str(settings.get_database_url), echo=False, future=True)
 
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -24,6 +22,7 @@ class Base(DeclarativeBase):
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Yield a database session"""
     logging.info("Creating a new database session")
     async with AsyncSessionLocal() as session:
         try:
@@ -36,5 +35,6 @@ async def init_db():
     """Initialize database tables"""
     async with engine.begin() as conn:
         # Import models to ensure they're registered
-        # from models import Agent, APIKey
+        from app.models.models import APIKey, User  # noqa: F401
+
         await conn.run_sync(Base.metadata.create_all)

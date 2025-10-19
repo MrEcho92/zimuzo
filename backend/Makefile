@@ -23,7 +23,7 @@ help:
 
 .PHONY: .pre-commit  ## Check that pre-commit is installed
 .pre-commit: .uv
-	@uv run pre-commit -V || uv pip install pre-commit
+	@uv run pre-commit -V || uv add --dev pre-commit
 
 .PHONY: .pre-commit-update  ## Check that pre-commit is installed
 .pre-commit-update: .uv
