@@ -25,9 +25,8 @@ services:
     depends_on:
       - db
     volumes:
-      - .:/app  # Mount the current directory to /app inside the container
-      - ./alembic/versions:/app/alembic/versions  # Ensure migration files are shared
-    working_dir: /app
+      - .:/app
+      - ./alembic/versions:/app/alembic/versions
 
   pgadmin:
       container_name: pgadmin
