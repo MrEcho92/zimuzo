@@ -74,7 +74,7 @@ docker-compose-up: ## Run docker compose up
 
 .PHONY: docker-compose-down
 docker-compose-down: ## Run docker compose down
-	docker-compose down
+	docker-compose down --rmi all --volumes --remove-orphans
 
 .PHONY: db-migrate
 db-migrate: ## Create a new migration and run migrations
