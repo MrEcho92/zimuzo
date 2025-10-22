@@ -16,7 +16,7 @@ Useful commands if you want to run locally:
 ```
 To run makemigrations and apply migrations
 
-docker-compose exec app alembic revision --autogenerate -m
-docker-compose exec app alembic upgrade head
+docker-compose exec app uv run alembic revision --autogenerate -m
+docker-compose exec app uv run alembic upgrade head
 
 ```
