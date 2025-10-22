@@ -74,6 +74,10 @@ docker-compose-up: ## Run docker compose up
 
 .PHONY: docker-compose-down
 docker-compose-down: ## Run docker compose down
+	docker-compose down
+
+.PHONY: docker-compose-down-full
+docker-compose-down-full: ## Run docker compose down removing all images, volumes, and orphans
 	docker-compose down --rmi all --volumes --remove-orphans
 
 .PHONY: db-migrate
