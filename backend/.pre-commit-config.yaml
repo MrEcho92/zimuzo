@@ -1,25 +1,25 @@
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
-  hooks:
-  - id: check-yaml
-    args: ['--unsafe']
-  - id: check-toml
-  - id: end-of-file-fixer
-  - id: trailing-whitespace
-- repo: local
-  hooks:
-  - id: lint
-    name: Lint with ruff
-    entry: bash
-    language: system
-    args: ['-c', 'uv run ruff check']
-    pass_filenames: false
-    stages: [pre-push]
-  # TODO: Uncomment the following to enable type checking with pyright
-  # - id: typecheck
-  #   name: Typecheck
-  #   entry: uv run pyright pydantic
-  #   types: [python]
-  #   language: system
-  #   pass_filenames: false
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+    - id: check-yaml
+      args: ['--unsafe']
+    - id: check-toml
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+  - repo: local
+    hooks:
+    - id: lint
+      name: lint
+      entry: ruff check
+      language: python
+      additional_dependencies: [ruff]
+      types: [python]
+      stages: [pre-commit]
+    # TODO: Uncomment the following to enable type checking with pyright
+    # - id: typecheck
+    #   name: Typecheck
+    #   entry: uv run pyright pydantic
+    #   types: [python]
+    #   language: system
+    #   pass_filenames: false

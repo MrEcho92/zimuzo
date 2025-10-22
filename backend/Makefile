@@ -21,9 +21,13 @@ help:
 .uv:
 	@uv -V || echo 'Please install uv: https://docs.astral.sh/uv/getting-started/installation/'
 
-.PHONY: .pre-commit  ## Check that pre-commit is installed
-.pre-commit: .uv
-	@uv run pre-commit -V || uv pip install pre-commit
+.PHONY: pre-commit  ## Check that pre-commit is installed
+pre-commit: .uv
+	@uv run pre-commit -V || uv add --dev pre-commit
+
+.PHONY: pre-commit-update  ## Check that pre-commit is installed
+pre-commit-update: .uv
+	uv run pre-commit autoupdate
 
 .PHONY: install  ## Install the package, dependencies, and pre-commit for local development
 install: .uv
@@ -47,7 +51,7 @@ lint: .uv
 
 .PHONY: isort ## Run isort on python source files
 isort: .uv
-	uv run isort $(SRC_DIR)
+	uv run isort $(SRC_DIRS)
 
 .PHONY: venv
 venv: .uv
@@ -72,14 +76,18 @@ docker-compose-up: ## Run docker compose up
 docker-compose-down: ## Run docker compose down
 	docker-compose down
 
+.PHONY: docker-compose-down-full
+docker-compose-down-full: ## Run docker compose down removing all images, volumes, and orphans
+	docker-compose down --rmi all --volumes --remove-orphans
+
 .PHONY: db-migrate
 db-migrate: ## Create a new migration and run migrations
 	@if [ -z "${MSG}" ]; then echo "Error: MSG variable is not set. Usage: make db-migrate MSG='your message'"; exit 1; fi
-	uv run alembic revision --autogenerate -m ${MSG}
+	docker-compose exec app uv run alembic revision --autogenerate -m ${MSG}
 
 .PHONY: db-upgrade
 db-upgrade: ## Apply all pending migrations
-	uv run alembic upgrade head
+	docker-compose exec app uv run alembic upgrade head
 
 .PHONY: clean  ## Clear local caches and build artifacts
 clean:

@@ -8,6 +8,7 @@ dependencies = [
     "fastapi==0.109.1",
     "mypy>=1.18.2",
     "psycopg2-binary>=2.9.10",
+    "psycopg[binary]>=3.2.10",
     "pydantic-settings>=2.10.1",
     "pydantic[email]==2.7.1",
     "python-multipart>=0.0.20",
@@ -27,6 +28,7 @@ dev = [
     "black>=25.9.0",
     "httpx>=0.26.0",
     "isort>=6.0.1",
+    "pre-commit>=4.3.0",
     "pytest>=8.4.2",
     "ruff>=0.13.1",
 ]
