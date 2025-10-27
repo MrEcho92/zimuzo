@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -13,18 +14,18 @@ class UserResponse(BaseModel):
     username: str
     email: str
     is_active: bool
-    created_at: str
+    created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class APIKeyResponse(BaseModel):
     key_id: uuid.UUID
     username: str
     is_active: bool
-    created_at: str
-    last_used: str | None
+    created_at: datetime
+    last_used: datetime | None
 
     class Config:
         from_attributes = True
