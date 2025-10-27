@@ -27,4 +27,4 @@ class APIKeyResponse(BaseModel):
     last_used: str | None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
