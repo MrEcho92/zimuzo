@@ -53,7 +53,7 @@ async def verify_api_key(api_key: str, db: AsyncSession) -> str:
 
     # Update last_used timestamp
     api_key_record.last_used = datetime.now(timezone.utc)
-    await db.add(api_key_record)
+    db.add(api_key_record)
     await db.commit()
 
     return api_key_record.username

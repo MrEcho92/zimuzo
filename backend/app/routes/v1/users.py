@@ -64,7 +64,7 @@ async def generate_key_for_user(
         raw_key = generate_api_key()
         key_hash = hash_api_key(raw_key)
         api_key = APIKey(username=username, key_hash=key_hash)
-        await db.add(api_key)
+        db.add(api_key)
         await db.commit()
         await db.refresh(api_key)
 
