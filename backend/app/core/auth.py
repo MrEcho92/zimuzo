@@ -56,7 +56,10 @@ async def verify_api_key(api_key: str, db: AsyncSession) -> str:
     db.add(api_key_record)
     await db.commit()
 
-    return api_key_record.username
+    return {
+        "username": api_key_record.username,
+        "project_id": user.project.id,
+    }
 
 
 async def get_current_user(

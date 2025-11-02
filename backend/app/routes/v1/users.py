@@ -5,15 +5,17 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import generate_api_key, get_current_user, hash_api_key
+from app.core.auth import generate_api_key, hash_api_key
 from app.database.db import get_db
-from app.models.models import APIKey, User
+from app.models.models import APIKey, Project, User
 from app.schemas.schemas import APIKeyResponse, UserCreate, UserResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/admin/users", tags=["users"])
 
 
-@router.post("/admin/users/create", response_model=UserResponse)
+@router.post(
+    "/create", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_user(
     user: UserCreate, db: AsyncSession = Depends(get_db)
 ) -> UserResponse:
@@ -28,9 +30,12 @@ async def create_user(
             )
 
         new_user = User(username=user.username, email=user.email)
+        project = Project(name=f"{user.username}-project", user_id=new_user.id)
         db.add(new_user)
+        db.add(project)
         await db.commit()
         await db.refresh(new_user)
+        await db.refresh(project)
 
         return {
             "id": new_user.id,
@@ -46,7 +51,11 @@ async def create_user(
         )
 
 
-@router.post("/admin/users/{username}/keys/generate")
+@router.post(
+    "/{username}/keys/generate",
+    response_model=dict,
+    status_code=status.HTTP_201_CREATED,
+)
 async def generate_key_for_user(
     username: str, db: AsyncSession = Depends(get_db)
 ) -> dict:
@@ -83,7 +92,11 @@ async def generate_key_for_user(
         )
 
 
-@router.get("/admin/users/{username}/keys")
+@router.get(
+    "/{username}/keys",
+    response_model=list[APIKeyResponse],
+    status_code=status.HTTP_200_OK,
+)
 async def list_keys_for_user(
     username: str, db: AsyncSession = Depends(get_db)
 ) -> list[APIKeyResponse]:
@@ -107,7 +120,7 @@ async def list_keys_for_user(
         )
 
 
-@router.delete("/admin/users/{username}/keys/{key_id}")
+@router.delete("/{username}/keys/{key_id}", status_code=status.HTTP_200_OK)
 async def revoke_api_key(
     username: str, key_id: str, db: AsyncSession = Depends(get_db)
 ) -> Any:
@@ -134,7 +147,7 @@ async def revoke_api_key(
         )
 
 
-@router.delete("/admin/users/{username}")
+@router.delete("/{username}", status_code=status.HTTP_200_OK)
 async def delete_user(username: str, db: AsyncSession = Depends(get_db)) -> Any:
     """Delete a user and their API keys"""
     try:
@@ -162,23 +175,3 @@ async def delete_user(username: str, db: AsyncSession = Depends(get_db)) -> Any:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
-
-
-@router.get("/protected/profile")
-async def get_user_profile(
-    current_user: str = Depends(get_current_user), db: AsyncSession = Depends(get_db)
-) -> dict:
-    """Get current user's profile"""
-    user = select(User).where(User.username == current_user)
-    result = await db.execute(user)
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
-    return {
-        "username": user.username,
-        "email": user.email,
-        "is_active": user.is_active,
-        "created_at": user.created_at,
-    }

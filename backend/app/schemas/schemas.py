@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -29,3 +30,16 @@ class APIKeyResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class InboxCreate(BaseModel):
+    name: str
+    custom_domain: Optional[str] = None
+
+
+class InboxResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    address: str
+    custom_domain: Optional[str] = None
+    created_at: datetime
