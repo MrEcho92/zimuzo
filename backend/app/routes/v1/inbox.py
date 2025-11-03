@@ -92,7 +92,9 @@ async def get_inbox(
         )
         inbox = result.scalar_one_or_none()
         if not inbox:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inbox not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Inbox {inbox_id} not found"
+            )
 
         return InboxResponse(
             id=inbox.id,
