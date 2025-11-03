@@ -62,7 +62,7 @@ tests: .uv ## Run tests with pytest
 	uv run pytest -v --cov=$(TESTS_DIR) --cov-report=term-missing
 
 .PHONY: all  ## Run the standard set of checks performed in CI
-all: lint format isort
+all: lint isort format
 
 .PHONY: start
 start: ## Run FastAPI development server

@@ -1,4 +1,5 @@
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -30,12 +31,16 @@ async def list_threads(
         return [ThreadResponse.model_validate(thread) for thread in threads]
     except SQLAlchemyError as e:
         await db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
-@router.get("/{thread_id}", response_model=ThreadResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{thread_id}", response_model=ThreadResponse, status_code=status.HTTP_200_OK
+)
 async def get_thread(
-    thread_id: str,
+    thread_id: UUID,
     current_user_info: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ThreadResponse:
@@ -43,14 +48,19 @@ async def get_thread(
     try:
         project_id = current_user_info.get("project_id")
         result = await db.execute(
-            select(Thread).filter(Thread.id == thread_id, Thread.inbox.has(project_id=project_id))
+            select(Thread).filter(
+                Thread.id == thread_id, Thread.inbox.has(project_id=project_id)
+            )
         )
         thread = result.scalar_one_or_none()
         if not thread:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Thread {thread_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Thread {thread_id} not found",
             )
         return ThreadResponse.model_validate(thread)
     except SQLAlchemyError as e:
         await db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
