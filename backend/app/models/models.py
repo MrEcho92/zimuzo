@@ -107,6 +107,7 @@ class Inbox(Base):
         "Message", back_populates="inbox", cascade="all, delete-orphan"
     )
     drafts = relationship("Draft", back_populates="inbox", cascade="all, delete-orphan")
+    tags = relationship("Tag", back_populates="inbox", cascade="all, delete-orphan")
 
 
 class Thread(Base):
@@ -196,11 +197,14 @@ class Tag(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(100), nullable=False)
+    # TODO: is color necessary?
     color = Column(String(20))
     is_system = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    inbox_id = Column(UUID(as_uuid=True), ForeignKey("inboxes.id"), nullable=True)
 
     messages = relationship("Message", secondary=message_tags, back_populates="tags")
+    inbox = relationship("Inbox", back_populates="tags")
 
 
 class Attachment(Base):

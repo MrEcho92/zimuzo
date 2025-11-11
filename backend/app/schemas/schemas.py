@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserCreate(BaseModel):
@@ -121,6 +121,52 @@ class DraftResponse(BaseModel):
     body_text: str
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TagBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
+    color: str = Field(default="#888888", pattern="^#[0-9A-Fa-f]{6}$")
+
+
+class TagCreate(TagBase):
+    inbox_id: UUID
+
+
+class TagResponse(TagBase):
+    id: UUID
+    inbox_id: UUID
+    name: str
+    color: str
+    is_system: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MessageTagAssign(BaseModel):
+    tag_id: UUID
+
+
+class AttachmentCreate(BaseModel):
+    message_id: UUID
+    file_name: str
+    file_url: str
+    content_type: Optional[str] = None
+    size_bytes: Optional[int] = None
+
+
+class AttachmentResponse(BaseModel):
+    id: UUID
+    message_id: UUID
+    file_name: str
+    file_url: str
+    content_type: Optional[str] = None
+    size_bytes: Optional[int] = None
+    uploaded_at: datetime
 
     class Config:
         from_attributes = True
