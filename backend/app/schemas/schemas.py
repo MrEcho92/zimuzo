@@ -151,22 +151,15 @@ class MessageTagAssign(BaseModel):
     tag_id: UUID
 
 
-class AttachmentCreate(BaseModel):
-    message_id: UUID
-    file_name: str
-    file_url: str
-    content_type: Optional[str] = None
-    size_bytes: Optional[int] = None
-
-
 class AttachmentResponse(BaseModel):
     id: UUID
     message_id: UUID
     file_name: str
-    file_url: str
-    content_type: Optional[str] = None
-    size_bytes: Optional[int] = None
-    uploaded_at: datetime
+    content_type: Optional[str]
+    storage_url: str
+    size_bytes: Optional[int]
+    checksum: Optional[str]
+    created_at: datetime
 
     class Config:
         from_attributes = True
