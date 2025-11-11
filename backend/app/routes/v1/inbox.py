@@ -75,6 +75,7 @@ async def list_inboxes(
                 name=inbox.name,
                 address=inbox.address,
                 custom_domain=inbox.custom_domain,
+                active=inbox.active,
                 created_at=inbox.created_at,
             )
             for inbox in inboxes

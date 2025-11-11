@@ -43,7 +43,7 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # One-to-one relationship with Project
-    project = relationship(
+    projects = relationship(
         "Project", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
 
@@ -124,6 +124,9 @@ class Thread(Base):
     messages = relationship(
         "Message", back_populates="thread", cascade="all, delete-orphan"
     )
+    drafts = relationship(
+        "Draft", back_populates="thread", cascade="all, delete-orphan"
+    )
 
 
 class Message(Base):
@@ -151,6 +154,7 @@ class Message(Base):
     attachments = relationship(
         "Attachment", back_populates="message", cascade="all, delete-orphan"
     )
+    tags = relationship("Tag", secondary="message_tags", back_populates="messages")
 
 
 class Draft(Base):

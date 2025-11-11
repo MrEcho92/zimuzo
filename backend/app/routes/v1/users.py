@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.contants import DEFAULT_PROJECT_NAME
 from app.core.auth import generate_api_key, hash_api_key
 from app.database.db import get_db
 from app.models.models import APIKey, Project, User
@@ -30,11 +31,14 @@ async def create_user(
             )
 
         new_user = User(username=user.username, email=user.email)
-        project = Project(name=f"{user.username}-project", user_id=new_user.id)
         db.add(new_user)
-        db.add(project)
         await db.commit()
         await db.refresh(new_user)
+
+        # Create a default project for the new user
+        project = Project(name=DEFAULT_PROJECT_NAME, user_id=new_user.id)
+        db.add(project)
+        await db.commit()
         await db.refresh(project)
 
         return {
@@ -43,6 +47,7 @@ async def create_user(
             "email": new_user.email,
             "is_active": new_user.is_active,
             "created_at": new_user.created_at,
+            "project_name": project.name,
         }
     except SQLAlchemyError as e:
         db.rollback()

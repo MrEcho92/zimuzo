@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.auth import get_current_user
 from app.database.db import get_db
@@ -23,7 +24,13 @@ async def list_threads(
     try:
         project_id = current_user_info.get("project_id")
         result = await db.execute(
-            select(Thread).filter(
+            select(Thread)
+            .options(
+                selectinload(Thread.messages),
+                selectinload(Thread.drafts),
+                selectinload(Thread.inbox),
+            )
+            .filter(
                 Thread.inbox_id == inbox_id, Thread.inbox.has(project_id=project_id)
             )
         )
@@ -48,9 +55,13 @@ async def get_thread(
     try:
         project_id = current_user_info.get("project_id")
         result = await db.execute(
-            select(Thread).filter(
-                Thread.id == thread_id, Thread.inbox.has(project_id=project_id)
+            select(Thread)
+            .options(
+                selectinload(Thread.messages),
+                selectinload(Thread.drafts),
+                selectinload(Thread.inbox),
             )
+            .filter(Thread.id == thread_id, Thread.inbox.has(project_id=project_id))
         )
         thread = result.scalar_one_or_none()
         if not thread:

@@ -17,6 +17,7 @@ class UserResponse(BaseModel):
     email: str
     is_active: bool
     created_at: datetime
+    project_name: str
 
     class Config:
         from_attributes = True
@@ -106,15 +107,15 @@ class DraftCreate(BaseModel):
 
 
 class DraftUpdate(BaseModel):
-    to_address: Optional[EmailStr]
-    subject: Optional[str]
-    body_text: Optional[str]
+    to_address: Optional[EmailStr] = None
+    subject: Optional[str] = None
+    body_text: Optional[str] = None
 
 
 class DraftResponse(BaseModel):
     id: UUID
     inbox_id: UUID
-    thread_id: Optional[UUID]
+    thread_id: Optional[UUID] = None
     to_address: str
     subject: str
     body_text: str

@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyHeader
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.contants import API_KEY_HEADER_NAME
 from app.database.db import get_db
@@ -43,7 +44,9 @@ async def verify_api_key(api_key: str, db: AsyncSession) -> str:
 
     # Check if user is active
     user = await db.execute(
-        select(User).filter(User.username == api_key_record.username)
+        select(User)
+        .options(selectinload(User.projects))
+        .filter(User.username == api_key_record.username)
     )
     user = user.scalar_one_or_none()
     if not user or not user.is_active:
@@ -58,7 +61,7 @@ async def verify_api_key(api_key: str, db: AsyncSession) -> str:
 
     return {
         "username": api_key_record.username,
-        "project_id": user.project.id,
+        "project_id": user.projects.id,
     }
 
 
