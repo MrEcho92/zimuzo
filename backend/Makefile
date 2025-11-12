@@ -62,7 +62,7 @@ tests: .uv ## Run tests with pytest
 	uv run pytest -v --cov=$(TESTS_DIR) --cov-report=term-missing
 
 .PHONY: all  ## Run the standard set of checks performed in CI
-all: lint format isort
+all: lint isort format
 
 .PHONY: start
 start: ## Run FastAPI development server
@@ -81,9 +81,9 @@ docker-compose-down-full: ## Run docker compose down removing all images, volume
 	docker-compose down --rmi all --volumes --remove-orphans
 
 .PHONY: db-migrate
-db-migrate: ## Create a new migration and run migrations
-	@if [ -z "${MSG}" ]; then echo "Error: MSG variable is not set. Usage: make db-migrate MSG='your message'"; exit 1; fi
-	docker-compose exec app uv run alembic revision --autogenerate -m ${MSG}
+db-migrate: ## Create a new migration and run migrations E.g., make db-migrate MSG="add new field"
+	@if [ -z "$(MSG)" ]; then echo "Error: MSG variable is not set. Usage: make db-migrate MSG='your message'"; exit 1; fi
+	docker-compose exec app uv run alembic revision --autogenerate -m "$(MSG)"
 
 .PHONY: db-upgrade
 db-upgrade: ## Apply all pending migrations

@@ -27,6 +27,7 @@ services:
     volumes:
       - .:/app
       - ./alembic/versions:/app/alembic/versions
+      - venv:/app/.venv  # preserve .venv across container restarts
 
   pgadmin:
       container_name: pgadmin
@@ -41,3 +42,4 @@ services:
 
 volumes:
   db: {}
+  venv: {}
