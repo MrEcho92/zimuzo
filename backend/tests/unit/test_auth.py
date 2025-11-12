@@ -1,29 +1,24 @@
 import pytest
-from httpx import AsyncClient
-
-from app.database.db import get_db
-from app.main import app
+from unittest.mock import MagicMock, patch
 
 
-@pytest.fixture
-async def client(test_db):
-    """Create test client"""
-
-    async def override_get_db():
-        async with test_db() as session:
-            yield session
-
-    app.dependency_overrides[get_db] = override_get_db
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        yield ac
-
-    app.dependency_overrides.clear()
+@pytest.fixture(scope="session", autouse=True)
+def mock_everything():
+    """Mock all external dependencies"""
+    with patch("app.database.db.create_async_engine"), patch("app.database.db.sessionmaker"), patch(
+        "app.database.db.Base", MagicMock()
+    ), patch("app.database.db.get_db"):
+        yield
 
 
-@pytest.fixture
-async def test_health(client):
+def test_health():
     """Test health check endpoint"""
-    response = await client.get("/health")
+    # Import after mocking
+    from app.main import app
+    from starlette.testclient import TestClient
+
+    client = TestClient(app)
+    response = client.get("/health")
+
     assert response.status_code == 200
     assert response.json() == {"status": "healthy"}
