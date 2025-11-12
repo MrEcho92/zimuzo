@@ -6,9 +6,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.auth import get_current_user
+from app.config.auth import get_current_user
 from app.database.db import get_db
-from app.models.models import Thread
+from app.core.models import Thread
 from app.schemas.schemas import ThreadResponse
 
 router = APIRouter(prefix="/threads", tags=["threads"])

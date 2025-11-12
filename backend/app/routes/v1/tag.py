@@ -6,9 +6,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.auth import get_current_user
+from app.config.auth import get_current_user
 from app.database.db import get_db
-from app.models.models import Inbox, Message, Tag, Thread
+from app.core.models import Inbox, Message, Tag, Thread
 from app.schemas.schemas import MessageTagAssign, TagCreate, TagResponse
 
 router = APIRouter(prefix="/tags", tags=["tags"])

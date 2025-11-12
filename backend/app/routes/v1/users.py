@@ -6,9 +6,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.contants import DEFAULT_PROJECT_NAME
-from app.core.auth import generate_api_key, hash_api_key
+from app.config.auth import generate_api_key, hash_api_key
 from app.database.db import get_db
-from app.models.models import APIKey, Project, User
+from app.core.models import APIKey, Project, User
 from app.schemas.schemas import APIKeyResponse, UserCreate, UserResponse
 
 router = APIRouter(prefix="/admin/users", tags=["users"])

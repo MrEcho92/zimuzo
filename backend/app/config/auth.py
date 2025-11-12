@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from app.contants import API_KEY_HEADER_NAME
 from app.database.db import get_db
-from app.models.models import APIKey, User
+from app.core.models import APIKey, User
 
 api_key_header = APIKeyHeader(
     name=API_KEY_HEADER_NAME, description="API Key for authentication"

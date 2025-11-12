@@ -7,15 +7,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.contants import ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE
-from app.core.auth import get_current_user
+from app.config.auth import get_current_user
 from app.database.db import get_db
-from app.models.models import Attachment, Message, Thread
+from app.core.models import Attachment, Message, Thread
 from app.schemas.schemas import AttachmentResponse
 from app.utils.message_storage import storage_service
 
 router = APIRouter(prefix="/attachments", tags=["attachments"])
 
-#TODO: Integrate object storage (AWS S3, GCS, or Supabase Storage) for attachments.
+
+# TODO: Integrate object storage (AWS S3, GCS, or Supabase Storage) for attachments.
 @router.post(
     "/", response_model=AttachmentResponse, status_code=status.HTTP_201_CREATED
 )
