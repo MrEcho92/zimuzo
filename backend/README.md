@@ -1,13 +1,15 @@
 # zimuzo backend
 
 ## Overview
-This backend application is built using FastAPI. It provides a RESTful API for managing resources.
+This backend application is built using FastAPI. It provides a RESTful API for managing resources for AI agents interactions.
 
-## Requirements
+## Quick Start
+
+### Prerequisites
 - Python 3.10+
-- FastAPI
-- Uvicorn
 - UV
+- Docker & Docker Compose
+- Make (optional, but recommended)
 
 If you have docker desktop installed locally, then run command `docker-compose up`. This command sets up database, application and pgadmin for the database.
 

@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserCreate(BaseModel):
@@ -19,8 +19,7 @@ class UserResponse(BaseModel):
     created_at: datetime
     project_name: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class APIKeyResponse(BaseModel):
@@ -30,8 +29,7 @@ class APIKeyResponse(BaseModel):
     created_at: datetime
     last_used: datetime | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InboxCreate(BaseModel):
@@ -79,8 +77,7 @@ class MessageResponse(BaseModel):
     status: MessageStatus
     sent_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ThreadBase(BaseModel):
@@ -94,8 +91,7 @@ class ThreadResponse(ThreadBase):
     created_at: datetime
     messages: Optional[List[MessageResponse]] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DraftCreate(BaseModel):
@@ -122,8 +118,7 @@ class DraftResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TagBase(BaseModel):
@@ -143,8 +138,7 @@ class TagResponse(TagBase):
     is_system: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MessageTagAssign(BaseModel):
@@ -161,5 +155,4 @@ class AttachmentResponse(BaseModel):
     checksum: Optional[str]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
