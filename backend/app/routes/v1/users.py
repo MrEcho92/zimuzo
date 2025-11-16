@@ -5,11 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.contants import DEFAULT_PROJECT_NAME
 from app.config.auth import generate_api_key, hash_api_key
-from app.database.db import get_db
+from app.contants import DEFAULT_PROJECT_NAME
 from app.core.models import APIKey, Project, User
-from app.schemas.schemas import APIKeyResponse, UserCreate, UserResponse
+from app.database.db import get_db
+from app.core.schemas import APIKeyResponse, UserCreate, UserResponse
 
 router = APIRouter(prefix="/admin/users", tags=["users"])
 

@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.contants import API_DOC_URL
 from app.config.config import settings
+from app.contants import API_DOC_URL
 from app.routes.v1.routes import api_router
 
 app = FastAPI(title=settings.project_name, docs_url=API_DOC_URL)
