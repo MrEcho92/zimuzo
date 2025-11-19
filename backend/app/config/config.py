@@ -1,11 +1,8 @@
 import os
 from typing import List
 
-from dotenv import load_dotenv
 from pydantic import AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -22,6 +19,9 @@ class Settings(BaseSettings):
     domain: str = "localhost"
     db_host: str = "db"
     database_url: str = ""
+    redis_url: str = ""
+    celery_broker_url: str = ""
+    celery_result_backend: str = ""
 
     @property
     def get_database_url(self) -> str:

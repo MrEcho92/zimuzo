@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -5,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.auth import get_current_user
 from app.core.models import Inbox
-from app.database.db import get_db
 from app.core.schemas import InboxCreate, InboxResponse
+from app.database.db import get_db
 
 router = APIRouter(prefix="/inboxes", tags=["inboxes"])
 
@@ -89,7 +91,7 @@ async def list_inboxes(
 
 @router.get("/{inbox_id}", response_model=InboxResponse, status_code=status.HTTP_200_OK)
 async def get_inbox(
-    inbox_id: str,
+    inbox_id: UUID,
     current_user_info: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> InboxResponse:
@@ -124,7 +126,7 @@ async def get_inbox(
 
 @router.delete("/{inbox_id}", status_code=status.HTTP_200_OK)
 async def delete_inbox(
-    inbox_id: str,
+    inbox_id: UUID,
     current_user_info: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:

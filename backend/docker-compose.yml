@@ -6,7 +6,7 @@ services:
     env_file:
       - .env
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - db:/var/lib/postgresql/data
     environment:
@@ -25,15 +25,45 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8000:8000
+      - "8000:8000"
     env_file:
       - .env
     depends_on:
       - db
+      - mailhog
+      - redis
     volumes:
       - .:/app
       - ./alembic/versions:/app/alembic/versions
       - venv:/app/.venv  # preserve .venv across container restarts
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  celery-worker:
+    build: .
+    command: celery -A app.workers.celery_app.celery_app worker --loglevel=info -Q default
+    depends_on:
+      - app
+      - redis
+    env_file:
+      - .env
+
+  # Flower - Celery monitoring dashboard
+  flower:
+    build: .
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - celery-worker
+    command: celery -A app.workers.celery_app.celery_app flower --port=5555
+    restart: unless-stopped
 
   pgadmin:
       container_name: pgadmin

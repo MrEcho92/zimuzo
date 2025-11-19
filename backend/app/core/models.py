@@ -2,17 +2,10 @@ import enum
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    Enum,
-    ForeignKey,
-    Integer,
-    String,
-    Table,
-    Text,
-)
+from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import Enum
+
+from sqlalchemy import ForeignKey, Integer, String, Table, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -25,10 +18,22 @@ class MessageDirection(str, enum.Enum):
 
 
 class MessageStatus(str, enum.Enum):
-    RECEIVED = "received"
     QUEUED = "queued"
+    SENDING = "sending"
     SENT = "sent"
     FAILED = "failed"
+    DELIVERED = "delivered"
+    BOUNCED = "bounced"
+
+
+class EventType(str, enum.Enum):
+    MESSAGE_QUEUED = "message.queued"
+    MESSAGE_SENT = "message.sent"
+    MESSAGE_FAILED = "message.failed"
+    MESSAGE_DELIVERED = "message.delivered"
+    MESSAGE_BOUNCED = "message.bounced"
+    MESSAGE_RECEIVED = "message.received"
+    MESSAGE_PARSED = "message.parsed"
 
 
 class User(Base):
@@ -53,9 +58,7 @@ class APIKey(Base):
 
     __tablename__ = "api_keys"
 
-    key_id = Column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
-    )
+    key_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     username = Column(String, index=True)
     key_hash = Column(String)
     is_active = Column(Boolean, default=True)
@@ -70,15 +73,11 @@ class Project(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(100), nullable=False)
-    user_id = Column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True
-    )
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="projects")
-    inboxes = relationship(
-        "Inbox", back_populates="project", cascade="all, delete-orphan"
-    )
+    inboxes = relationship("Inbox", back_populates="project", cascade="all, delete-orphan")
 
 
 class Inbox(Base):
@@ -89,6 +88,7 @@ class Inbox(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(100), nullable=False)
     address = Column(String(255), unique=True, nullable=False)
+    system_prompt = Column(Text)
     custom_domain = Column(String(255), nullable=True)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
     active = Column(Boolean, default=True)
@@ -100,12 +100,8 @@ class Inbox(Base):
     )
 
     project = relationship("Project", back_populates="inboxes")
-    threads = relationship(
-        "Thread", back_populates="inbox", cascade="all, delete-orphan"
-    )
-    messages = relationship(
-        "Message", back_populates="inbox", cascade="all, delete-orphan"
-    )
+    threads = relationship("Thread", back_populates="inbox", cascade="all, delete-orphan")
+    messages = relationship("Message", back_populates="inbox", cascade="all, delete-orphan")
     drafts = relationship("Draft", back_populates="inbox", cascade="all, delete-orphan")
     tags = relationship("Tag", back_populates="inbox", cascade="all, delete-orphan")
 
@@ -118,16 +114,13 @@ class Thread(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     inbox_id = Column(UUID(as_uuid=True), ForeignKey("inboxes.id"), nullable=False)
     subject = Column(String(255))
+    status = Column(String(20), default="active")  # active, closed
     last_message_at = Column(DateTime)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     inbox = relationship("Inbox", back_populates="threads")
-    messages = relationship(
-        "Message", back_populates="thread", cascade="all, delete-orphan"
-    )
-    drafts = relationship(
-        "Draft", back_populates="thread", cascade="all, delete-orphan"
-    )
+    messages = relationship("Message", back_populates="thread", cascade="all, delete-orphan")
+    drafts = relationship("Draft", back_populates="thread", cascade="all, delete-orphan")
 
 
 class Message(Base):
@@ -147,14 +140,19 @@ class Message(Base):
     message_id = Column(String(255))  # Original Message-ID header
     in_reply_to = Column(String(255))  # In-Reply-To header
     sent_at = Column(DateTime)
-    status = Column(Enum(MessageStatus), default=MessageStatus.RECEIVED)
+    status = Column(Enum(MessageStatus), default=MessageStatus.QUEUED)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    delivered_at = Column(DateTime)
+
+    # Provider-specific IDs
+    provider_message_id = Column(String(255))  # Resend email ID
+
+    # Metadata
+    parsed_metadata = Column(Text)  # JSON: OTP codes, links, etc.
 
     thread = relationship("Thread", back_populates="messages")
     inbox = relationship("Inbox", back_populates="messages")
-    attachments = relationship(
-        "Attachment", back_populates="message", cascade="all, delete-orphan"
-    )
+    attachments = relationship("Attachment", back_populates="message", cascade="all, delete-orphan")
     tags = relationship("Tag", secondary="message_tags", back_populates="messages")
 
 
@@ -183,9 +181,7 @@ class Draft(Base):
 message_tags = Table(
     "message_tags",
     Base.metadata,
-    Column(
-        "message_id", UUID(as_uuid=True), ForeignKey("messages.id"), primary_key=True
-    ),
+    Column("message_id", UUID(as_uuid=True), ForeignKey("messages.id"), primary_key=True),
     Column("tag_id", UUID(as_uuid=True), ForeignKey("tags.id"), primary_key=True),
 )
 
@@ -222,3 +218,38 @@ class Attachment(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     message = relationship("Message", back_populates="attachments")
+
+
+class Webhook(Base):
+    __tablename__ = "webhooks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    inbox_id = Column(UUID(as_uuid=True), ForeignKey("inboxes.id", ondelete="CASCADE"))
+    target_url = Column(String, nullable=False)
+    secret_token = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    inbox = relationship("Inbox", back_populates="webhooks")
+
+
+class Event(Base):
+    __tablename__ = "events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_type = Column(Enum(EventType), nullable=False)
+    inbox_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("inboxes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    message_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("messages.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    payload = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

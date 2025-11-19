@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.auth import get_current_user
 from app.core.models import Draft, Inbox
-from app.database.db import get_db
 from app.core.schemas import DraftCreate, DraftResponse, DraftUpdate
+from app.database.db import get_db
 
 router = APIRouter(prefix="/drafts", tags=["drafts"])
 

@@ -5,14 +5,19 @@ description = "Backend service for AI agent email provider"
 requires-python = ">=3.10"
 dependencies = [
     "alembic>=1.16.5",
+    "celery[redis]>=5.5.3",
     "fastapi==0.109.1",
+    "flower>=2.0.1",
     "mypy>=1.18.2",
     "psycopg2-binary>=2.9.10",
     "psycopg[binary]>=3.2.10",
     "pydantic-settings>=2.10.1",
-    "pydantic[email]==2.7.1",
+    "pydantic[email]>=2.0.0",
     "python-multipart>=0.0.20",
+    "redis>=5.2.1",
+    "resend>=2.19.0",
     "sqlalchemy>=2.0.43",
+    "svix>=1.15.0",
     "uvicorn[standard]>=0.12.0,<0.23.0",
 ]
 

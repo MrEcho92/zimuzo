@@ -8,8 +8,8 @@ from sqlalchemy.orm import selectinload
 
 from app.config.auth import get_current_user
 from app.core.models import Thread
-from app.database.db import get_db
 from app.core.schemas import ThreadResponse
+from app.database.db import get_db
 
 router = APIRouter(prefix="/threads", tags=["threads"])
 

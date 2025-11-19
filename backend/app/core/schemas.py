@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
 
 
 class UserCreate(BaseModel):
@@ -76,6 +76,8 @@ class MessageResponse(BaseModel):
     direction: MessageDirection
     status: MessageStatus
     sent_at: Optional[datetime]
+
+    provider_message_id: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -153,6 +155,20 @@ class AttachmentResponse(BaseModel):
     storage_url: str
     size_bytes: Optional[int]
     checksum: Optional[str]
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WebhookCreate(BaseModel):
+    inbox_id: UUID
+    target_url: HttpUrl
+    secret_token: str | None = None
+
+
+class WebhookResponse(WebhookCreate):
+    id: UUID
+    is_active: bool
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

@@ -9,9 +9,9 @@ from sqlalchemy.orm import selectinload
 from app.config.auth import get_current_user
 from app.contants import ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE
 from app.core.models import Attachment, Message, Thread
+from app.core.schemas import AttachmentResponse
 from app.database.db import get_db
 from app.services.message_storage import storage_service
-from app.core.schemas import AttachmentResponse
 
 router = APIRouter(prefix="/attachments", tags=["attachments"])
 
