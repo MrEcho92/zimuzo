@@ -2,10 +2,18 @@ import enum
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, Boolean, Column, DateTime
-from sqlalchemy import Enum
-
-from sqlalchemy import ForeignKey, Integer, String, Table, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -58,7 +66,9 @@ class APIKey(Base):
 
     __tablename__ = "api_keys"
 
-    key_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    key_id = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
+    )
     username = Column(String, index=True)
     key_hash = Column(String)
     is_active = Column(Boolean, default=True)
@@ -73,11 +83,15 @@ class Project(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(100), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True)
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True
+    )
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="projects")
-    inboxes = relationship("Inbox", back_populates="project", cascade="all, delete-orphan")
+    inboxes = relationship(
+        "Inbox", back_populates="project", cascade="all, delete-orphan"
+    )
 
 
 class Inbox(Base):
@@ -100,8 +114,12 @@ class Inbox(Base):
     )
 
     project = relationship("Project", back_populates="inboxes")
-    threads = relationship("Thread", back_populates="inbox", cascade="all, delete-orphan")
-    messages = relationship("Message", back_populates="inbox", cascade="all, delete-orphan")
+    threads = relationship(
+        "Thread", back_populates="inbox", cascade="all, delete-orphan"
+    )
+    messages = relationship(
+        "Message", back_populates="inbox", cascade="all, delete-orphan"
+    )
     drafts = relationship("Draft", back_populates="inbox", cascade="all, delete-orphan")
     tags = relationship("Tag", back_populates="inbox", cascade="all, delete-orphan")
 
@@ -119,8 +137,12 @@ class Thread(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     inbox = relationship("Inbox", back_populates="threads")
-    messages = relationship("Message", back_populates="thread", cascade="all, delete-orphan")
-    drafts = relationship("Draft", back_populates="thread", cascade="all, delete-orphan")
+    messages = relationship(
+        "Message", back_populates="thread", cascade="all, delete-orphan"
+    )
+    drafts = relationship(
+        "Draft", back_populates="thread", cascade="all, delete-orphan"
+    )
 
 
 class Message(Base):
@@ -152,7 +174,9 @@ class Message(Base):
 
     thread = relationship("Thread", back_populates="messages")
     inbox = relationship("Inbox", back_populates="messages")
-    attachments = relationship("Attachment", back_populates="message", cascade="all, delete-orphan")
+    attachments = relationship(
+        "Attachment", back_populates="message", cascade="all, delete-orphan"
+    )
     tags = relationship("Tag", secondary="message_tags", back_populates="messages")
 
 
@@ -181,7 +205,9 @@ class Draft(Base):
 message_tags = Table(
     "message_tags",
     Base.metadata,
-    Column("message_id", UUID(as_uuid=True), ForeignKey("messages.id"), primary_key=True),
+    Column(
+        "message_id", UUID(as_uuid=True), ForeignKey("messages.id"), primary_key=True
+    ),
     Column("tag_id", UUID(as_uuid=True), ForeignKey("tags.id"), primary_key=True),
 )
 

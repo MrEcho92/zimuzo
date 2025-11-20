@@ -183,8 +183,15 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
             db=db,
             inbox_id=inbox.id,
             message_id=message.id,
-            event_type=EventType.MESSAGE_RECEIVED,
-            payload={"message_id": str(message.id), "resource_id": resource_id},
+            event_type=EventType.MESSAGE_RECEIVED.value,
+            payload={
+                "message_id": str(message.id),
+                "resource_id": resource_id,
+                # "sender": from_email,
+                # "subject": subject,
+                # "extracted_data": extracted_data,  # The "Gold" for the agent
+                # "body_snippet": text_body[:200],
+            },
         )
         return Response(status_code=status.HTTP_200_OK)
     except SQLAlchemyError as e:

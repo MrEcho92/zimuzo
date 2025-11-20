@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.events import store_event_and_queue_webhooks
 from app.core.models import EventType, Inbox, Message, MessageStatus
-from app.database.db import AsyncSessionLocal
+from app.database.db import get_db
 
 resend.api_key = os.getenv("RESEND_API_KEY")
 
@@ -26,7 +26,7 @@ async def send_email_task(self, message_id: str) -> str:
     4. Update status based on result (sent/failed)
     5. Store event and queue webhook delivery
     """
-    db: AsyncSession = AsyncSessionLocal()
+    db: AsyncSession = get_db()
     try:
         message_result = await db.execute(
             select(Message).filter(
@@ -55,6 +55,7 @@ async def send_email_task(self, message_id: str) -> str:
             "subject": message.subject,
             # prefer html if available - here we only have body_text
             "html": f"<pre>{message.body_text}</pre>",
+            "text": message.body_text,
         }
         response = resend.Emails.send(params)
         message.status = MessageStatus.SENT
@@ -71,7 +72,7 @@ async def send_email_task(self, message_id: str) -> str:
             event_type=EventType.MESSAGE_SENT.value,
             payload={
                 "message_id": str(message.id),
-                "resend_id": getattr(response, "id", None) or response.get("id"),
+                "resend_id": message.provider_message_id,
             },
         )
 
@@ -85,7 +86,7 @@ async def send_email_task(self, message_id: str) -> str:
             countdown = 5
         self.retry(exc=exc, countdown=countdown)
     except Exception as exc:
-        message.status = MessageStatus.FAILED
+        message.status = MessageStatus.FAILED.value
         await db.commit()
         store_event_and_queue_webhooks(
             db=db,
