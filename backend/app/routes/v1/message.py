@@ -7,9 +7,18 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.auth import get_current_user
-from app.core.models import Inbox, Message, MessageDirection, MessageStatus, Thread
+from app.core.models import (
+    Inbox,
+    Message,
+    MessageDirection,
+    MessageStatus,
+    Thread,
+    EventType,
+)
 from app.core.schemas import MessageCreate, MessageResponse
 from app.database.db import get_db
+from app.core.events import store_event_and_queue_webhooks
+from app.workers.tasks_email import send_email_task
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 
@@ -20,7 +29,14 @@ async def send_message(
     db: AsyncSession = Depends(get_db),
     current_user_info: dict = Depends(get_current_user),
 ) -> MessageResponse:
-    """Send a new message"""
+    """Send a new message
+
+    Agent calls endpoint to send an email.
+    1. Validate Inbox.
+    2. Save Message (queued).
+    3. Enqueue Celery Task.
+
+    """
     try:
         project_id = current_user_info.get("project_id")
         inbox_result = await db.execute(
@@ -70,8 +86,18 @@ async def send_message(
         await db.commit()
         await db.refresh(message)
 
-        # TODO: Integrate with actual email sending service here
-        # Future: queue async mail send via Celery or AWS SES here
+        # Enqueue Celery task
+        send_email_task.delay(message_id=str(message.id))
+
+        # Emit queued event
+        store_event_and_queue_webhooks(
+            db=db,
+            inbox_id=inbox.id,
+            message_id=message.id,
+            event_type=EventType.MESSAGE_QUEUED.value,
+            payload={"message_id": str(message.id)},
+        )
+
         return MessageResponse.model_validate(message)
     except SQLAlchemyError as e:
         await db.rollback()
