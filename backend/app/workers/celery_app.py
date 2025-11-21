@@ -11,6 +11,10 @@ celery_app = Celery(
     "zimuzo_worker",
     broker=REDIS_URL,
     backend=REDIS_URL,
+    include=[
+        "app.workers.tasks_email",
+        "app.workers.tasks_webhooks",
+    ],
 )
 
 celery_app.conf.update(

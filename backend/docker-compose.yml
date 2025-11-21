@@ -38,15 +38,15 @@ services:
       - venv:/app/.venv  # preserve .venv across container restarts
 
   redis:
-    image: redis:7
+    image: redis:7-alpine
     ports:
       - "6379:6379"
 
-  celery-worker:
+  celery_worker:
     build: .
     command: celery -A app.workers.celery_app.celery_app worker --loglevel=info -Q default
     depends_on:
-      - app
+      - db
       - redis
     env_file:
       - .env
@@ -54,17 +54,16 @@ services:
   # Flower - Celery monitoring dashboard
   flower:
     build: .
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     ports:
       - "5555:5555"
     depends_on:
       - redis
-      - celery-worker
+      - celery_worker
     command: celery -A app.workers.celery_app.celery_app flower --port=5555
     restart: unless-stopped
-
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
   pgadmin:
       container_name: pgadmin
       image: dpage/pgadmin4

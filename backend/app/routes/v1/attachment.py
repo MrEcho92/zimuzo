@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config.auth import get_current_user
-from app.contants import ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE
+from app.core.contants import ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE
 from app.core.models import Attachment, Message, Thread
 from app.core.schemas import AttachmentResponse
 from app.database.db import get_db
@@ -17,9 +17,7 @@ router = APIRouter(prefix="/attachments", tags=["attachments"])
 
 
 # TODO: Integrate object storage (AWS S3, GCS, or Supabase Storage) for attachments.
-@router.post(
-    "/", response_model=AttachmentResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/", response_model=AttachmentResponse, status_code=status.HTTP_201_CREATED)
 async def upload_attachment(
     message_id: UUID,
     file: UploadFile = File(...),
@@ -135,10 +133,7 @@ async def list_attachments_for_message(
                 detail=f"Message {message_id} not found",
             )
 
-        return [
-            AttachmentResponse.model_validate(attachment)
-            for attachment in message.attachments
-        ]
+        return [AttachmentResponse.model_validate(attachment) for attachment in message.attachments]
     except SQLAlchemyError as e:
         await db.rollback()
         raise HTTPException(
@@ -160,9 +155,7 @@ async def delete_attachment(
         result = await db.execute(
             select(Attachment).filter(
                 Attachment.id == attachment_id,
-                Attachment.message.has(
-                    Message.thread.has(Thread.inbox.has(project_id=project_id))
-                ),
+                Attachment.message.has(Message.thread.has(Thread.inbox.has(project_id=project_id))),
             )
         )
         attachment = result.scalar_one_or_none()

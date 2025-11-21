@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.auth import generate_api_key, hash_api_key
-from app.contants import DEFAULT_PROJECT_NAME
+from app.core.contants import DEFAULT_PROJECT_NAME
 from app.core.models import APIKey, Project, User
 from app.core.schemas import APIKeyResponse, UserCreate, UserResponse
 from app.database.db import get_db
@@ -14,12 +14,8 @@ from app.database.db import get_db
 router = APIRouter(prefix="/admin/users", tags=["users"])
 
 
-@router.post(
-    "/create", response_model=UserResponse, status_code=status.HTTP_201_CREATED
-)
-async def create_user(
-    user: UserCreate, db: AsyncSession = Depends(get_db)
-) -> UserResponse:
+@router.post("/create", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)) -> UserResponse:
     """Create a new user"""
     try:
         stmt = select(User).where(User.username == user.username)
@@ -51,9 +47,7 @@ async def create_user(
         }
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.post(
@@ -61,18 +55,14 @@ async def create_user(
     response_model=dict,
     status_code=status.HTTP_201_CREATED,
 )
-async def generate_key_for_user(
-    username: str, db: AsyncSession = Depends(get_db)
-) -> dict:
+async def generate_key_for_user(username: str, db: AsyncSession = Depends(get_db)) -> dict:
     """Generate an API key for a user"""
     try:
         stmt = select(User).where(User.username == username)
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         # Generate key
         raw_key = generate_api_key()
@@ -92,9 +82,7 @@ async def generate_key_for_user(
         }
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get(
@@ -111,45 +99,33 @@ async def list_keys_for_user(
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         stmt = select(APIKey).where(APIKey.username == username)
         result = await db.execute(stmt)
         keys = result.scalars().all()
         return [APIKeyResponse.model_validate(k) for k in keys]
     except SQLAlchemyError as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.delete("/{username}/keys/{key_id}", status_code=status.HTTP_200_OK)
-async def revoke_api_key(
-    username: str, key_id: str, db: AsyncSession = Depends(get_db)
-) -> Any:
+async def revoke_api_key(username: str, key_id: str, db: AsyncSession = Depends(get_db)) -> Any:
     """Revoke an API key"""
     try:
-        stmt = select(APIKey).where(
-            APIKey.key_id == key_id, APIKey.username == username
-        )
+        stmt = select(APIKey).where(APIKey.key_id == key_id, APIKey.username == username)
         result = await db.execute(stmt)
         api_key = result.scalar_one_or_none()
 
         if not api_key:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="API key not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
 
         api_key.is_active = False
         await db.commit()
         return {"message": "API key revoked"}
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.delete("/{username}", status_code=status.HTTP_200_OK)
@@ -160,9 +136,7 @@ async def delete_user(username: str, db: AsyncSession = Depends(get_db)) -> Any:
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         # Delete related API keys first
         api_keys_stmt = select(APIKey).where(APIKey.username == username)
@@ -177,6 +151,4 @@ async def delete_user(username: str, db: AsyncSession = Depends(get_db)) -> Any:
         return {"message": "User and associated API keys deleted"}
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

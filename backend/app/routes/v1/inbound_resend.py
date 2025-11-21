@@ -175,7 +175,7 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
             db.add(a)
         await db.commit()
 
-        # Optionally perform parsing: OTP extraction / link detection here (call your parser)
+        # TODO: Optionally perform parsing: OTP extraction / link detection here (call your parser)
         # e.g. otp = extract_otp(text_body) ; store metadata / labels
 
         # Emit internal event and queue user webhooks
