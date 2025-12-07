@@ -89,17 +89,23 @@ async def send_message(
         await db.commit()
         await db.refresh(message)
 
-        # Enqueue Celery task
-        send_email_task.delay(message_id=str(message.id))
-
         # Emit queued event
-        store_event_and_queue_webhooks(
+        await store_event_and_queue_webhooks(
             db=db,
             inbox_id=inbox.id,
             message_id=message.id,
-            event_type=EventType.MESSAGE_QUEUED.value,
-            payload={"message_id": str(message.id)},
+            event_type=EventType.MESSAGE_QUEUED,
+            payload={
+                "message_id": str(message.id),
+                "status": MessageStatus.QUEUED,
+                "from": message.from_address,
+                "to": message.to_address,
+                "subject": message.subject,
+            },
         )
+
+        # Enqueue Celery task
+        send_email_task.delay(message_id=str(message.id))
 
         return MessageResponse.model_validate(message)
     except SQLAlchemyError as e:

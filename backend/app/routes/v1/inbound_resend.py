@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime, timezone
 
@@ -26,6 +27,8 @@ RESEND_WEBHOOK_SECRET = os.getenv("RESEND_WEBHOOK_SECRET")
 RESEND_API_BASE = "https://api.resend.com"
 resend.api_key = os.getenv("RESEND_API_KEY")
 
+logger = logging.getLogger(__name__)
+
 
 @router.post("/email-received", status_code=status.HTTP_200_OK)
 async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get_db)):
@@ -34,6 +37,7 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
         headers = {k.lower(): v for k, v in request.headers.items()}
 
         if not RESEND_WEBHOOK_SECRET:
+            logger.error("Webhook secret not configured")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Webhook secret not configured",
@@ -59,6 +63,7 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
 
         resource_id = data.get("email_id") or data.get("id") or None
         if not resource_id:
+            logger.error("Resource ID not found in event data")
             await store_event_and_queue_webhooks(
                 db, None, None, EventType.MESSAGE_UKNOWN, {"event": event}
             )
@@ -77,6 +82,7 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
 
         to_list = received.get("to") or []
         if len(to_list) != 1:
+            logger.error("Multiple recipients not supported in this webhook handler")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Multiple recipients not supported in this webhook handler",
@@ -89,6 +95,7 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
             inbox = result.scalar_one_or_none()
 
         if not inbox:
+            logger.error(f"Inbox not found for recipient: {to_list}")
             await store_event_and_queue_webhooks(
                 db,
                 None,
@@ -153,7 +160,7 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
         # message.parsed_metadata = json.dumps(parsed_data)
         # await db.commit()
         # Emit internal event and queue user webhooks
-        print("message", message)
+        logger.info(f"Processing message: {message.id}")
         await store_event_and_queue_webhooks(
             db=db,
             inbox_id=inbox.id,
@@ -172,7 +179,7 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
 
     except SQLAlchemyError as e:
         await db.rollback()
-        print("Error processing inbound email webhook:", str(e))
+        logger.error("Error processing inbound email webhook: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

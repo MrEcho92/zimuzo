@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     postgres_port: int = 5432
     postgres_user: str = "postgres"
     postgres_password: str = "postgres"
-    postgres_db: str = "zimuzo-db"
+    postgres_db: str = "zimuzo_db"
     env: str = "dev"
     domain: str = "localhost"
     db_host: str = "db"

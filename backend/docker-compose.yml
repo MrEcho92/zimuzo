@@ -64,6 +64,7 @@ services:
     environment:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+
   pgadmin:
       container_name: pgadmin
       image: dpage/pgadmin4
