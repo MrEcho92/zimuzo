@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -11,6 +12,8 @@ from app.core.schemas import WebhookCreate, WebhookResponse
 from app.database.db import get_db
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=WebhookResponse, status_code=201)
@@ -45,6 +48,7 @@ async def create_webhook(
         return webhook
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error creating webhook: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -69,4 +73,5 @@ async def list_webhooks(
         return webhooks
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error listing webhooks: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))

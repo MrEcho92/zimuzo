@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,6 +13,8 @@ from app.database.db import get_db
 
 router = APIRouter(prefix="/inboxes", tags=["inboxes"])
 
+logger = logging.getLogger(__name__)
+
 
 @router.post(
     "/create", response_model=InboxResponse, status_code=status.HTTP_201_CREATED
@@ -23,7 +26,8 @@ async def create_inbox(
 ) -> InboxResponse:
     """Create a new inbox"""
     try:
-        domain = inbox.custom_domain or "zimuzo.dev"
+        # TODO: use custom domain e.g. zimuzo.dev
+        domain = inbox.custom_domain or "eustoibai.resend.app"
         address = f"{inbox.name}@{domain}"
         project_id = current_user_info.get("project_id")
         existing_inbox = await db.execute(
@@ -54,6 +58,7 @@ async def create_inbox(
         )
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error creating inbox: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -84,6 +89,7 @@ async def list_inboxes(
         ]
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error listing inboxes: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -119,6 +125,7 @@ async def get_inbox(
         )
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error retrieving inbox: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -149,6 +156,7 @@ async def delete_inbox(
         return {"message": "Inbox deleted successfully"}
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error deleting inbox: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

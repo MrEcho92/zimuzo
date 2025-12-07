@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -7,20 +8,22 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.auth import get_current_user
+from app.core.events import store_event_and_queue_webhooks
 from app.core.models import (
+    EventType,
     Inbox,
     Message,
     MessageDirection,
     MessageStatus,
     Thread,
-    EventType,
 )
 from app.core.schemas import MessageCreate, MessageResponse
 from app.database.db import get_db
-from app.core.events import store_event_and_queue_webhooks
 from app.workers.tasks_email import send_email_task
 
 router = APIRouter(prefix="/messages", tags=["messages"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
@@ -101,6 +104,7 @@ async def send_message(
         return MessageResponse.model_validate(message)
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error sending message: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -132,6 +136,7 @@ async def get_message(
         return MessageResponse.model_validate(message)
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error retrieving message: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

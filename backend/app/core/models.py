@@ -21,27 +21,28 @@ from app.database.db import Base
 
 
 class MessageDirection(str, enum.Enum):
-    INBOUND = "inbound"
-    OUTBOUND = "outbound"
+    INBOUND = "INBOUND"
+    OUTBOUND = "OUTBOUND"
 
 
 class MessageStatus(str, enum.Enum):
-    QUEUED = "queued"
-    SENDING = "sending"
-    SENT = "sent"
-    FAILED = "failed"
-    DELIVERED = "delivered"
-    BOUNCED = "bounced"
+    QUEUED = "QUEUED"
+    SENDING = "SENDING"
+    SENT = "SENT"
+    FAILED = "FAILED"
+    DELIVERED = "DELIVERED"
+    BOUNCED = "BOUNCED"
 
 
 class EventType(str, enum.Enum):
-    MESSAGE_QUEUED = "message.queued"
-    MESSAGE_SENT = "message.sent"
-    MESSAGE_FAILED = "message.failed"
-    MESSAGE_DELIVERED = "message.delivered"
-    MESSAGE_BOUNCED = "message.bounced"
-    MESSAGE_RECEIVED = "message.received"
-    MESSAGE_PARSED = "message.parsed"
+    MESSAGE_QUEUED = "MESSAGE.QUEUED"
+    MESSAGE_SENT = "MESSAGE.SENT"
+    MESSAGE_FAILED = "MESSAGE.FAILED"
+    MESSAGE_DELIVERED = "MESSAGE.DELIVERED"
+    MESSAGE_BOUNCED = "MESSAGE.BOUNCED"
+    MESSAGE_RECEIVED = "MESSAGE.RECEIVED"
+    MESSAGE_PARSED = "MESSAGE.PARSED"
+    MESSAGE_UKNOWN = "MESSAGE.UNKNOWN"
 
 
 class User(Base):
@@ -122,6 +123,9 @@ class Inbox(Base):
     )
     drafts = relationship("Draft", back_populates="inbox", cascade="all, delete-orphan")
     tags = relationship("Tag", back_populates="inbox", cascade="all, delete-orphan")
+    webhooks = relationship(
+        "Webhook", back_populates="inbox", cascade="all, delete-orphan"
+    )
 
 
 class Thread(Base):
@@ -155,14 +159,16 @@ class Message(Base):
     inbox_id = Column(UUID(as_uuid=True), ForeignKey("inboxes.id"), nullable=False)
     direction = Column(Enum(MessageDirection), nullable=False)
     from_address = Column(String(255))
-    to_address = Column(String(255))
+    to_address = Column(
+        String(255)
+    )  # Could be multiple recipients comma-separated or list
     subject = Column(String(255))
     body_text = Column(Text)
     body_html = Column(Text)
     message_id = Column(String(255))  # Original Message-ID header
     in_reply_to = Column(String(255))  # In-Reply-To header
     sent_at = Column(DateTime)
-    status = Column(Enum(MessageStatus), default=MessageStatus.QUEUED)
+    status = Column(Enum(MessageStatus), default=MessageStatus.QUEUED.value)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     delivered_at = Column(DateTime)
 

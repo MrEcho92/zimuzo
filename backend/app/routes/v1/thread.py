@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -12,6 +13,8 @@ from app.core.schemas import ThreadResponse
 from app.database.db import get_db
 
 router = APIRouter(prefix="/threads", tags=["threads"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=list[ThreadResponse], status_code=status.HTTP_200_OK)
@@ -38,6 +41,7 @@ async def list_threads(
         return [ThreadResponse.model_validate(thread) for thread in threads]
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error retrieving threads: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -72,6 +76,7 @@ async def get_thread(
         return ThreadResponse.model_validate(thread)
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error retrieving thread: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

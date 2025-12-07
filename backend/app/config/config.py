@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     redis_url: str = ""
     celery_broker_url: str = ""
     celery_result_backend: str = ""
+    resend_api_key: str = ""
+    resend_webhook_secret: str = ""
 
     @property
     def get_database_url(self) -> str:

@@ -1,9 +1,10 @@
 from datetime import datetime
-from enum import Enum
 from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
+
+from app.core.models import MessageDirection, MessageStatus
 
 
 class UserCreate(BaseModel):
@@ -43,18 +44,6 @@ class InboxResponse(BaseModel):
     address: str
     custom_domain: Optional[str] = None
     created_at: datetime
-
-
-class MessageDirection(str, Enum):
-    INBOUND = "inbound"
-    OUTBOUND = "outbound"
-
-
-class MessageStatus(str, Enum):
-    RECEIVED = "received"
-    QUEUED = "queued"
-    SENT = "sent"
-    FAILED = "failed"
 
 
 class MessageCreate(BaseModel):

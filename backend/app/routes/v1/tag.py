@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,6 +13,8 @@ from app.core.schemas import MessageTagAssign, TagCreate, TagResponse
 from app.database.db import get_db
 
 router = APIRouter(prefix="/tags", tags=["tags"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=TagResponse, status_code=status.HTTP_201_CREATED)
@@ -58,6 +61,7 @@ async def create_tag(
         return TagResponse.model_validate(tag)
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error creating tag: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
@@ -129,6 +133,7 @@ async def assign_tag_to_message(
         }
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error assigning tag to message: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
@@ -148,6 +153,7 @@ async def list_tags(
         return [TagResponse.model_validate(tag) for tag in tags]
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error listing tags: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
@@ -179,6 +185,7 @@ async def get_inbox_tags(
 
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error retrieving inbox tags: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
@@ -217,6 +224,7 @@ async def get_message_tags(
 
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error retrieving message tags: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
@@ -271,6 +279,7 @@ async def unassign_tag_from_message(
         return None
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error unassigning tag from message: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}",
@@ -302,6 +311,7 @@ async def delete_tag(
         return None
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error deleting tag: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),

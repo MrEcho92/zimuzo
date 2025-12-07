@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.models import Event, EventType, Webhook
+from app.core.models import Event, Webhook
 from app.workers.tasks_webhooks import deliver_webhook_task
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ async def store_event_and_queue_webhooks(
     """
     try:
         event = Event(
-            event_type=EventType(event_type),
+            event_type=event_type,
             inbox_id=inbox_id,
             message_id=message_id,
             payload=payload,
