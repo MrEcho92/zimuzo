@@ -27,3 +27,13 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             yield session
         finally:
             await session.close()
+
+
+def get_sync_session():
+    """Get a synchronous database session"""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    sync_engine = create_engine(str(settings.get_database_url).replace("+asyncpg", ""))
+    SyncSessionLocal = sessionmaker(bind=sync_engine)
+    return SyncSessionLocal()

@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -6,11 +7,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.auth import get_current_user
-from app.database.db import get_db
 from app.core.models import Draft, Inbox
-from app.schemas.schemas import DraftCreate, DraftResponse, DraftUpdate
+from app.core.schemas import DraftCreate, DraftResponse, DraftUpdate
+from app.database.db import get_db
 
 router = APIRouter(prefix="/drafts", tags=["drafts"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=DraftResponse, status_code=status.HTTP_201_CREATED)
@@ -40,6 +43,7 @@ async def create_draft(
         return DraftResponse.model_validate(new_draft)
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error creating draft: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -68,6 +72,7 @@ async def get_draft(
         return DraftResponse.model_validate(draft)
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error retrieving draft: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -103,6 +108,7 @@ async def update_draft(
         return DraftResponse.model_validate(draft)
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error updating draft: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -132,6 +138,7 @@ async def delete_draft(
         await db.commit()
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error deleting draft: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

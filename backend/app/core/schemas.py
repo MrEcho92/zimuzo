@@ -1,9 +1,10 @@
 from datetime import datetime
-from enum import Enum
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
+
+from app.core.models import MessageDirection, MessageStatus
 
 
 class UserCreate(BaseModel):
@@ -45,18 +46,6 @@ class InboxResponse(BaseModel):
     created_at: datetime
 
 
-class MessageDirection(str, Enum):
-    INBOUND = "inbound"
-    OUTBOUND = "outbound"
-
-
-class MessageStatus(str, Enum):
-    RECEIVED = "received"
-    QUEUED = "queued"
-    SENT = "sent"
-    FAILED = "failed"
-
-
 class MessageCreate(BaseModel):
     inbox_id: UUID
     thread_id: Optional[UUID] = None
@@ -76,6 +65,8 @@ class MessageResponse(BaseModel):
     direction: MessageDirection
     status: MessageStatus
     sent_at: Optional[datetime]
+
+    provider_message_id: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -153,6 +144,20 @@ class AttachmentResponse(BaseModel):
     storage_url: str
     size_bytes: Optional[int]
     checksum: Optional[str]
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WebhookCreate(BaseModel):
+    inbox_id: UUID
+    target_url: HttpUrl
+    secret_token: str | None = None
+
+
+class WebhookResponse(WebhookCreate):
+    id: UUID
+    is_active: bool
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

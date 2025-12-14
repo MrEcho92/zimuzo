@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -6,14 +7,16 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.contants import ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE
 from app.config.auth import get_current_user
-from app.database.db import get_db
+from app.core.contants import ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE
 from app.core.models import Attachment, Message, Thread
-from app.schemas.schemas import AttachmentResponse
-from app.utils.message_storage import storage_service
+from app.core.schemas import AttachmentResponse
+from app.database.db import get_db
+from app.services.message_storage import storage_service
 
 router = APIRouter(prefix="/attachments", tags=["attachments"])
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: Integrate object storage (AWS S3, GCS, or Supabase Storage) for attachments.
@@ -91,6 +94,7 @@ async def upload_attachment(
         return AttachmentResponse.model_validate(attachment)
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error uploading attachment: %s", str(e))
         # Clean up file if database operation fails
         if "storage_url" in locals():
             storage_service.delete_file(storage_url)
@@ -100,6 +104,7 @@ async def upload_attachment(
         )
     except Exception as e:
         await db.rollback()
+        logger.error("Error uploading file: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error uploading file: {str(e)}",
@@ -141,6 +146,7 @@ async def list_attachments_for_message(
         ]
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error listing attachments: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}",
@@ -182,6 +188,7 @@ async def delete_attachment(
 
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error deleting attachment: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}",

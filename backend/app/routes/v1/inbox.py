@@ -1,14 +1,19 @@
+import logging
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.auth import get_current_user
-from app.database.db import get_db
 from app.core.models import Inbox
-from app.schemas.schemas import InboxCreate, InboxResponse
+from app.core.schemas import InboxCreate, InboxResponse
+from app.database.db import get_db
 
 router = APIRouter(prefix="/inboxes", tags=["inboxes"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post(
@@ -21,8 +26,10 @@ async def create_inbox(
 ) -> InboxResponse:
     """Create a new inbox"""
     try:
-        domain = inbox.custom_domain or "zimuzo.dev"
-        address = f"{inbox.name}@{domain}"
+        # TODO: use custom domain e.g. zimuzo.dev
+        # Must be unique for address. Can only send emails to RESEND owner address
+        domain = inbox.custom_domain or "resend.dev"
+        address = f"delivered+{inbox.name}@{domain}"
         project_id = current_user_info.get("project_id")
         existing_inbox = await db.execute(
             select(Inbox).filter(
@@ -52,6 +59,7 @@ async def create_inbox(
         )
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error creating inbox: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -82,6 +90,7 @@ async def list_inboxes(
         ]
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error listing inboxes: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -89,7 +98,7 @@ async def list_inboxes(
 
 @router.get("/{inbox_id}", response_model=InboxResponse, status_code=status.HTTP_200_OK)
 async def get_inbox(
-    inbox_id: str,
+    inbox_id: UUID,
     current_user_info: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> InboxResponse:
@@ -117,6 +126,7 @@ async def get_inbox(
         )
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error retrieving inbox: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -124,7 +134,7 @@ async def get_inbox(
 
 @router.delete("/{inbox_id}", status_code=status.HTTP_200_OK)
 async def delete_inbox(
-    inbox_id: str,
+    inbox_id: UUID,
     current_user_info: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
@@ -147,6 +157,7 @@ async def delete_inbox(
         return {"message": "Inbox deleted successfully"}
     except SQLAlchemyError as e:
         await db.rollback()
+        logger.error("Error deleting inbox: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

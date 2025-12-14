@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -5,13 +6,15 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.contants import DEFAULT_PROJECT_NAME
 from app.config.auth import generate_api_key, hash_api_key
-from app.database.db import get_db
+from app.core.contants import DEFAULT_PROJECT_NAME
 from app.core.models import APIKey, Project, User
-from app.schemas.schemas import APIKeyResponse, UserCreate, UserResponse
+from app.core.schemas import APIKeyResponse, UserCreate, UserResponse
+from app.database.db import get_db
 
 router = APIRouter(prefix="/admin/users", tags=["users"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post(
@@ -50,7 +53,8 @@ async def create_user(
             "project_name": project.name,
         }
     except SQLAlchemyError as e:
-        db.rollback()
+        await db.rollback()
+        logger.error("Error creating user: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -91,7 +95,8 @@ async def generate_key_for_user(
             "note": "Save this API key securely. You won't be able to see it again.",
         }
     except SQLAlchemyError as e:
-        db.rollback()
+        await db.rollback()
+        logger.error("Error generating API key: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -120,6 +125,8 @@ async def list_keys_for_user(
         keys = result.scalars().all()
         return [APIKeyResponse.model_validate(k) for k in keys]
     except SQLAlchemyError as e:
+        await db.rollback()
+        logger.error("Error listing API keys: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -146,7 +153,8 @@ async def revoke_api_key(
         await db.commit()
         return {"message": "API key revoked"}
     except SQLAlchemyError as e:
-        db.rollback()
+        await db.rollback()
+        logger.error("Error revoking API key: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -160,6 +168,7 @@ async def delete_user(username: str, db: AsyncSession = Depends(get_db)) -> Any:
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
         if not user:
+            logger.error("User %s not found for deletion", username)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
@@ -176,7 +185,8 @@ async def delete_user(username: str, db: AsyncSession = Depends(get_db)) -> Any:
         await db.commit()
         return {"message": "User and associated API keys deleted"}
     except SQLAlchemyError as e:
-        db.rollback()
+        await db.rollback()
+        logger.error("Error deleting user: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

@@ -8,9 +8,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.contants import API_KEY_HEADER_NAME
-from app.database.db import get_db
+from app.core.contants import API_KEY_HEADER_NAME
 from app.core.models import APIKey, User
+from app.database.db import get_db
 
 api_key_header = APIKeyHeader(
     name=API_KEY_HEADER_NAME, description="API Key for authentication"

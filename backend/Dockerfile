@@ -27,6 +27,9 @@ RUN useradd -m -u 1001 appuser && \
 
 USER appuser
 
+# Add uv's virtual environment to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
 EXPOSE 8000
 
 CMD ["./start.sh"]
