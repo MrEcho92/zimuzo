@@ -43,7 +43,7 @@ def send_email_task(self, message_id: str) -> str:
 
         msg.status = MessageStatus.SENDING
         db.commit()
-
+        logger.info(f"Sending message {msg.id} via Resend")
         params: resend.Emails.SendParams = {
             "from": msg.from_address,
             "to": [msg.to_address],

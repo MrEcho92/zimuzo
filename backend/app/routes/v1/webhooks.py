@@ -39,7 +39,7 @@ async def create_webhook(
 
         webhook = Webhook(
             inbox_id=payload.inbox_id,
-            target_url=payload.target_url,
+            target_url=str(payload.target_url),
             secret_token=payload.secret_token if payload.secret_token else None,
         )
         db.add(webhook)

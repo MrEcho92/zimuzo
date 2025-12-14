@@ -44,7 +44,7 @@ services:
 
   celery_worker:
     build: .
-    command: celery -A app.workers.celery_app.celery_app worker --loglevel=info -Q default
+    command: celery -A app.workers.celery_app.celery_app worker --loglevel=info
     depends_on:
       - db
       - redis

@@ -27,8 +27,9 @@ async def create_inbox(
     """Create a new inbox"""
     try:
         # TODO: use custom domain e.g. zimuzo.dev
-        domain = inbox.custom_domain or "eustoibai.resend.app"
-        address = f"{inbox.name}@{domain}"
+        # Must be unique for address. Can only send emails to RESEND owner address
+        domain = inbox.custom_domain or "resend.dev"
+        address = f"delivered+{inbox.name}@{domain}"
         project_id = current_user_info.get("project_id")
         existing_inbox = await db.execute(
             select(Inbox).filter(

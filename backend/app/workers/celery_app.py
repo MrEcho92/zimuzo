@@ -13,13 +13,8 @@ celery_app = Celery(
     "zimuzo_worker",
     broker=CELERY_BROKER_URL,
     backend=CELERY_RESULT_BACKEND,
-    include=[
-        "app.workers.tasks_email",
-        "app.workers.tasks_webhooks",
-    ],
+    include=["app.workers.tasks_email", "app.workers.tasks_webhooks"],
 )
-
-celery_app.autodiscover_tasks(["app.workers"])
 
 celery_app.conf.update(
     task_track_started=True,
