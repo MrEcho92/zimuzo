@@ -62,4 +62,4 @@ archive.zip
 /sandbox/
 /worktrees/
 /storage/
-/tools/*
+/tools/tokens.json
