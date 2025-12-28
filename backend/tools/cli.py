@@ -53,10 +53,10 @@ def init_db():
     # Test connection
     result = make_request("GET", "/health")
     if result:
-        print("✅ Database initialized successfully")
+        print("Database initialized successfully")
         print(json.dumps(result, indent=2))
     else:
-        print("❌ Failed to initialize database")
+        print("Failed to initialize database")
 
 
 def get_token(username):
@@ -111,7 +111,7 @@ def create_user_profile():
     )
 
     if not result:
-        print("❌ Failed to create user profile")
+        print("Failed to create user profile")
         return
     # Generate token for user
     payload = make_request("POST", f"/api/v1/admin/users/{username}/keys/generate")
@@ -120,7 +120,7 @@ def create_user_profile():
         save_token(username, api_key)
         print("Saved API key to file to tools/tokens.json")
     else:
-        print("❌ Failed to generate API key")
+        print("Failed to generate API key")
 
 
 def create_inbox(username, name=None, system_prompt=None):
@@ -137,32 +137,32 @@ def create_inbox(username, name=None, system_prompt=None):
         data=data,
     )
     if result:
-        print("✅ Inbox created successfully!")
+        print("Inbox created successfully!")
         print(json.dumps(result, indent=2))
     else:
-        print("❌ Failed to create inbox")
+        print("Failed to create inbox")
 
 
 def list_inboxes(username):
     """List inboxes"""
     result = make_request("GET", "/api/v1/inboxes", username=username)
     if result:
-        print("✅ Get Inboxes successfully!")
+        print("Get Inboxes successfully!")
         print(json.dumps(result, indent=2))
     else:
         print("result", result)
-        print("❌ Failed to get inboxes")
+        print("Failed to get inboxes")
 
 
 def send_message(username, inbox_name, to_email):
     """Send message"""
     inboxes = make_request("GET", "/api/v1/inboxes", username=username)
     if not inboxes:
-        print("❌ Failed to get inboxes")
+        print("Failed to get inboxes")
     print("inboxes", inboxes)
     inbox = [inbox for inbox in inboxes if inbox.get("name") == inbox_name]
     if not inbox:
-        print(f"❌ Inbox '{inbox_name}' not found")
+        print(f"Inbox '{inbox_name}' not found")
         return
     inbox = inbox[0]
 
@@ -188,11 +188,11 @@ def send_message(username, inbox_name, to_email):
 
     result = make_request("POST", "/api/v1/messages", username, data)
     if result:
-        print("✅ Test email queued!")
+        print("Test email queued!")
         print(json.dumps(result, indent=2))
         print(f"   curl {API_URL}/api/v1/messages/{result['id']}")
     else:
-        print("❌ Failed to send test email")
+        print("Failed to send test email")
 
 
 def show_help():

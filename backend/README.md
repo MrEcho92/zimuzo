@@ -113,7 +113,7 @@ The project uses GitHub Actions for continuous integration:
 ┌─────────────────────────────────────────────────────────────┐
 │                    OUTBOUND FLOW                            │
 ├─────────────────────────────────────────────────────────────┤
-│ 1. POST /messages                              │
+│ 1. POST /messages                                           │
 │    ↓                                                        │
 │ 2. Store Message(status=QUEUED) in PostgreSQL               │
 │    ↓                                                        │
