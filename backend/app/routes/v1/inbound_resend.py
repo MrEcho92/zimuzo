@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from datetime import datetime, timezone
@@ -20,6 +21,7 @@ from app.core.models import (
     Thread,
 )
 from app.database.db import get_db
+from app.services.email_parser import EmailParser
 
 router = APIRouter(prefix="/webhooks/resend", tags=["inbound"])
 
@@ -28,6 +30,8 @@ RESEND_API_BASE = "https://api.resend.com"
 resend.api_key = os.getenv("RESEND_API_KEY")
 
 logger = logging.getLogger(__name__)
+
+parser = EmailParser()
 
 
 @router.post("/email-received", status_code=status.HTTP_200_OK)
@@ -154,11 +158,15 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
             db.add(a)
         await db.commit()
 
-        # TODO: Optionally perform parsing: OTP extraction / link detection here (call your parser)
-        # e.g. otp = extract_otp(text_body) ; store metadata / labels
-        # parsed_data = parse_email_content(text_body=text_body, system_prompt=inbox.system_prompt)
-        # message.parsed_metadata = json.dumps(parsed_data)
-        # await db.commit()
+        # Parse content for OTPs, links, etc. and store parsed metadata
+        try:
+            parsed_data = await parser.parse(text=text_body, html=html_body)
+        except Exception as e:
+            logger.error(f"Parse error: {e}")
+            raise HTTPException(status_code=500, detail="Parsing error")
+        message.parsed_metadata = json.dumps(parsed_data)
+        await db.commit()
+
         # Emit internal event and queue user webhooks
         logger.info(f"Processing message: {message.id}")
         await store_event_and_queue_webhooks(
@@ -171,7 +179,15 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
                 "resource_id": resource_id,
                 "sender": from_address,
                 "subject": subject,
-                # "extracted_data": extracted_data,  # The "Gold" for the agent
+                # The "Gold" for the agent
+                "extracted_data": {
+                    "otp": parsed_data.otp_codes[0].code
+                    if parsed_data.otp_codes
+                    else None,
+                    "verify_url": parsed_data.links[0].url
+                    if parsed_data.links
+                    else None,
+                },
                 "body_snippet": text_body[:200],
             },
         )
