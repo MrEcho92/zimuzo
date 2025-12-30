@@ -113,9 +113,7 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
         thread = None
         if reply_to:
             thread_result = await db.execute(
-                select(Thread).filter(
-                    Thread.inbox_id == inbox.id, Thread.subject == subject
-                )
+                select(Thread).filter(Thread.inbox_id == inbox.id, Thread.subject == subject)
             )
             thread = thread_result.scalar_one_or_none()
 
@@ -159,11 +157,11 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
         await db.commit()
 
         # Parse content for OTPs, links, etc. and store parsed metadata
+        parsed_data = {}
         try:
             parsed_data = await parser.parse(text=text_body, html=html_body)
         except Exception as e:
             logger.error(f"Parse error: {e}")
-            raise HTTPException(status_code=500, detail="Parsing error")
         message.parsed_metadata = json.dumps(parsed_data)
         await db.commit()
 
@@ -181,12 +179,8 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
                 "subject": subject,
                 # The "Gold" for the agent
                 "extracted_data": {
-                    "otp": parsed_data.otp_codes[0].code
-                    if parsed_data.otp_codes
-                    else None,
-                    "verify_url": parsed_data.links[0].url
-                    if parsed_data.links
-                    else None,
+                    "otp": parsed_data.otp_codes[0].code if parsed_data.otp_codes else None,
+                    "verify_url": parsed_data.links[0].url if parsed_data.links else None,
                 },
                 "body_snippet": text_body[:200],
             },
@@ -196,6 +190,4 @@ async def handle_resend_inbound(request: Request, db: AsyncSession = Depends(get
     except SQLAlchemyError as e:
         await db.rollback()
         logger.error("Error processing inbound email webhook: %s", str(e))
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
