@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
@@ -161,3 +161,18 @@ class WebhookResponse(WebhookCreate):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ParseEmailRequest(BaseModel):
+    text: str
+    html: Optional[str] = None
+    use_llm_fallback: bool = True
+
+
+class ParseEmailResponse(BaseModel):
+    otp_codes: List[Dict[str, Any]]
+    links: List[Dict[str, Any]]
+    sender_intent: Optional[str] = None
+    requires_action: bool = False
+    summary: Optional[str] = None
+    metadata: Dict[str, Any] = {}
