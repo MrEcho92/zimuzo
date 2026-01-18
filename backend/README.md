@@ -32,7 +32,15 @@ This backend application is built using FastAPI. It provides a RESTful API for m
 3. **Configure environment variable**
 Edit `.env`
 
-4. **Start development environment**
+4. **Activate the virtual environment**
+```bash
+   make venv
+```
+5. **Install dependencies**
+```bash
+   make install
+```
+6. **Start development environment**
 ```bash
    make docker-compose-up
 ```
