@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     celery_result_backend: str = ""
     resend_api_key: str = ""
     resend_webhook_secret: str = ""
+    anthropic_api_key: str = ""
 
     @property
     def get_database_url(self) -> str:
